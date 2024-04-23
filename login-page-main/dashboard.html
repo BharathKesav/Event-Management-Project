@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="index.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+      body{
+        text-align: center;
+        font-family: "Archivo Black", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+      }
+      .q {
+  opacity: 0.5; /* Set the initial opacity */
+  transition: opacity 0.3s ease; /* Add a smooth transition effect */
+}
+
+.q:hover {
+  opacity: 1; /* Change the opacity on hover */
+}
+.but {
+  color:whitesmoke ;
+   border-radius: 15px;
+   border-bottom: solid  #FFBF00;
+    background-color: grey; 
+    border-top: none; 
+    border-left: none; 
+    border-right:none;
+    padding:6px; 
+}
+
+    /* Add this style to your CSS */
+    #cancelEventBtn:hover {
+        background-color: red;
+    }
+
+
+
+    </style>
+  
+  </head>
+
+<body>
+  
+  <nav class="navbar bg-body-tertiary navbarr">
+    <div class="container-fluid">
+      <button id="updatePhoneBtn" class="btn btn-primary but" style="margin-top: 7px; justify-content: right;">Update Phone Number</button>
+<input type="text" id="newPhoneNumberInput" style="display: none;" placeholder="Enter new phone number">
+
+      <button  style=" color:whitesmoke ; border-radius: 15px;border-bottom: solid  #FFBF00; background-color: grey; border-top: none; border-left: none; border-right:none;padding:6px; " onclick="logout()">Logout</button>
+
+      <div class="view"><button id="viewEventsBtn" class="btn btn-primary but" onclick="show()">View Registered Events</button></div> 
+    </div>
+    <!-- Add this button and input field to your dashboard page -->
+      
+  </nav>
+  <div class="total">
+    <div class="card q c1" style="width: 17rem; height:12rem">
+    <img src="..." class="card-img-top" alt="...">
+    <div class="card-body cardbody">
+      <h5 class="card-title">Flickers</h5>
+      <p class="card-text">"Showcase your best shots in our photography contest! Capture moments, evoke emotions"</p>
+      <a href="./page1.html" class="btn btn-primary but">REGISTER</a>
+      </div>
+    </div>
+      <div class="card q" style="width: 17rem; height:12rem ; ">
+    <img src="..." class="card-img-top" alt="...">
+        <div class="card-body">
+      <h5 class="card-title">Reel-to-real</h5>
+      <p class="card-text">"Dazzle us with your creativity in our reel competition! Show off your storytelling skills"</p>
+      <a href="./page2.html" class="btn btn-primary but">REGISTER</a>
+        </div>
+    </div>
+   
+    <div class="overlay"></div>
+<div id="eventNames" class="eventNames">
+
+ 
+</div>
+<div class="eeventNames" id="eeventNames">
+<input type="text" id="cancelEventInput" placeholder="Enter event to cancel" style="border:none; border-radius: 8px; outline:none; padding-right:10px;">
+<button id="cancelEventBtn" class="btn btn-primary but" style="margin-top: 7px; border-bottom: solid black;">Cancel Event</button>
+<button id="return" class="btn btn-primary but" style="margin-top: 7px; border-bottom: solid black;" onclick="retur()">return</button>
+</div>
+  
+
+    <img src="./3.png" class="phoneimg" id="ima">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+
+    <script>
+      const firebaseConfig = {
+  apiKey: "AIzaSyAZ8smDiXIXI76PXAvxqL5B0cAHv3YX7l4",
+  authDomain: "login-page-83807.firebaseapp.com",
+  databaseURL: "https://login-page-83807-default-rtdb.firebaseio.com",
+  projectId: "login-page-83807",
+  storageBucket: "login-page-83807.appspot.com",
+  messagingSenderId: "801473541781",
+  appId: "1:801473541781:web:3153775b4cc4962a86cd9c",
+  measurementId: "G-WH9Y9NY38L"
+};
+
+      function removeImageIfAbove600() {
+        var screenWidth = window.innerWidth;
+        var image = document.getElementById("ima");
+        if (screenWidth > 600) {
+          image.remove(); // Remove the image if screen width is greater than 600px
+        }
+      }
+    
+      removeImageIfAbove600(); // Call the function initially
+    
+      window.addEventListener("resize", function() {
+        removeImageIfAbove600(); // Call the function when the window is resized
+      });
+
+  
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+       
+        function fetchEventNames() {
+        const userEmail = firebase.auth().currentUser.email;
+        db.ref().once("value")
+            .then((snapshot) => {
+                let eventNames = [];
+                snapshot.forEach((categorySnapshot) => {
+                    categorySnapshot.forEach((eventSnapshot) => {
+                        const eventData = eventSnapshot.val();
+                        if (eventData.email === userEmail && eventData.eventName) {
+                            eventNames.push({
+                                eventName: eventData.eventName,
+                                categoryKey: categorySnapshot.key
+                            });
+                        }
+                    });
+                });
+                if (eventNames.length > 0) {
+                    document.getElementById("eventNames").innerHTML = `REGISTERED EVENTS : ${eventNames.map(event => event.eventName).join(", ")}`;
+                } else {
+                    document.getElementById("eventNames").innerHTML = "NO REGISTERED EVENTS FOUND";
+                }
+            })
+            .catch((error) => {
+                console.error('Error fetching events:', error);
+            });
+    }
+
+    document.getElementById("viewEventsBtn").addEventListener("click", fetchEventNames);
+
+    // Add event listener for cancel button
+    document.getElementById("cancelEventBtn").addEventListener("click", () => {
+    const cancelEventName = document.getElementById("cancelEventInput").value;
+    if (!cancelEventName) {
+        alert("Please enter an event name to cancel.");
+        return;
+    }
+
+    const userEmail = firebase.auth().currentUser.email;
+    db.ref().once("value")
+        .then((snapshot) => {
+            snapshot.forEach((categorySnapshot) => {
+                categorySnapshot.forEach((eventSnapshot) => {
+                    const eventData = eventSnapshot.val();
+                    if (eventData.email === userEmail && eventData.eventName === cancelEventName) {
+                        // Delete the specific event entry
+                        const eventKey = eventSnapshot.key;
+                        db.ref().child(categorySnapshot.key).child(eventKey).remove()
+                            .then(() => {
+                                console.log("Event deleted successfully.");
+                                fetchEventNames(); // Refresh the event list
+                            })
+                            .catch((error) => {
+                                console.error("Error deleting event:", error);
+                            });
+                    }
+                });
+            });
+        })
+        .catch((error) => {
+            console.error('Error fetching events:', error);
+        });
+});
+
+
+
+        function logout() {
+            firebase.auth().signOut().then(() => {
+                window.location.href = "index.html"; // Redirect to login page
+            }).catch((error) => {
+                console.error('Logout Error:', error);
+            });
+
+        }
+
+        
+      
+
+
+
+var popup = document.getElementById("eventNames");
+var overlay = document.querySelector(".overlay");
+var cancebtn = document.querySelector(".eeventNames")
+function show(){
+  popup.style.display="block";
+  overlay.style.display="block";
+  cancebtn.style.display="block";
+}
+function retur(){
+  popup.style.display="none";
+  overlay.style.display="none";
+  cancebtn.style.display="none";
+}
+document.getElementById("updatePhoneBtn").addEventListener("click", () => {
+    const newPhoneNumber = prompt("Enter your new phone number:");
+    if (newPhoneNumber === null || newPhoneNumber === "") {
+        alert("Please enter a valid phone number.");
+        return;
+    }
+
+    const userEmail = firebase.auth().currentUser.email;
+    db.ref().once("value")
+        .then((snapshot) => {
+            snapshot.forEach((categorySnapshot) => {
+                categorySnapshot.forEach((eventSnapshot) => {
+                    const eventData = eventSnapshot.val();
+                    if (eventData.email === userEmail) {
+                        // Update the phone number
+                        eventSnapshot.ref.update({ phoneNumber: newPhoneNumber })
+                            .then(() => {
+                                console.log("Phone number updated successfully.");
+                                // Refresh the page or update the UI as needed
+                            })
+                            .catch((error) => {
+                                console.error("Error updating phone number:", error);
+                            });
+                    }
+                });
+            });
+        })
+        .catch((error) => {
+            console.error('Error fetching events:', error);
+        });
+});
+
+    </script>
+    
+    
+    <div class="card q" style="width: 17rem; height:12rem">
+    <img src="..." class="card-img-top" alt="...">
+        <div class="card-body">
+      <h5 class="card-title">Generation Vogue
+        [Ramp Walk]</h5>
+      <p class="card-text">
+       Silent Generation to the cutting-edge trends of Generations in our spectacular ‘FUSION’ ./p>
+      <a href="./page3.html" class="btn btn-primary but">REGISTER</a>
+        </div>
+    </div>
+    <div class="card q" style="width: 17rem; height:12rem">
+    <img src="..." class="card-img-top" alt="...">
+        <div class="card-body">
+      <h5 class="card-title">Cinezer
+        [Short Film]</h5>
+      <p class="card-text">
+         Ignite Your Lens is more than a competition; it’s a journey to push creative boundaries.</p>
+      <a href="./page4.html" class="btn btn-primary but">REGISTER</a>
+        </div>
+    </div>
+    <div class="card q" style="width: 17rem; height:12rem">
+    <img src="..." class="card-img-top" alt="...">
+        <div class="card-body">
+      <h5 class="card-title">Mozhi
+        [Mime]</h5>
+      <p class="card-text">
+        Talented performers weave emotive movements, transcending words with a  theme.</p>
+      <a href="./page5.html" class="btn btn-primary but">REGISTER</a>
+        </div>
+    </div>
+  </div>
+  
+</body>
+</html>
